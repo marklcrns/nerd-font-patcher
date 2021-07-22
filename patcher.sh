@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-# Dependencies:
-# - fontforge http://designwithfontforge.com/en-US/Installing_Fontforge.html
-# - python configparser `pip install configparser`
-# - Run fetch_resources.sh
+# Credits: https://gist.github.com/ELLIOTTCABLE/5b87ab21b11acb76a5c52d47a022b519
 
 SCRIPTPATH=${BASH_SOURCE%/*}
 
