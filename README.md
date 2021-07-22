@@ -1,5 +1,8 @@
 # Nerd Font Patcher
 
+[Nerd Font](https://github.com/ryanoasis/nerd-fonts) patcher script for patching
+fonts in bulk.
+
 ## Dependencies
 
 - [fontforge](http://designwithfontforge.com/en-US/Installing_Fontforge.html)
