@@ -12,8 +12,8 @@ fonts in bulk.
 
 ## Usage
 
-Copy `patcher.sh` script and `src` directory into the same directory as the
-fonts to be patched. Then run:
+Copy `patcher.sh`, `font-patcher.py`, and `src` directory into the same
+directory as the fonts to be patched. Then run:
 
 ```bash
 ./patcher.sh

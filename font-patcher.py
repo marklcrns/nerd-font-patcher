@@ -51,7 +51,17 @@ class font_patcher:
         self.extension = ""
         self.setup_arguments()
         self.config = configparser.ConfigParser(empty_lines_in_values=False, allow_no_value=True)
-        self.sourceFont = fontforge.open(self.args.font)
+        if not os.path.isfile(self.args.font):
+            sys.exit("{}: Font file does not exist: {}".format(projectName, self.args.font))
+        if not os.access(self.args.font, os.R_OK):
+            sys.exit("{}: Can not open font file for reading: {}".format(projectName, self.args.font))
+        if len(fontforge.fontsInFile(self.args.font)) > 1:
+            sys.exit("{}: Font file contains {} fonts, can only handle single font files".format(projectName,
+                len(fontforge.fontsInFile(self.args.font))))
+        try:
+            self.sourceFont = fontforge.open(self.args.font, 1) # 1 = ("fstypepermitted",))
+        except Exception:
+            sys.exit(projectName + ": Can not open font, try to open with fontforge interactively to get more information")
         self.setup_font_names()
         self.remove_ligatures()
         make_sure_path_exists(self.args.outputdir)
@@ -62,16 +72,28 @@ class font_patcher:
         self.sourceFont.encoding = 'UnicodeFull'  # Update the font encoding to ensure that the Unicode glyphs are available
         self.onlybitmaps = self.sourceFont.onlybitmaps  # Fetch this property before adding outlines. NOTE self.onlybitmaps initialized and never used
         if self.args.extension == "":
-            self.extension = os.path.splitext(self.sourceFont.path)[1]
+            self.extension = os.path.splitext(self.args.font)[1]
         else:
             self.extension = '.' + self.args.extension
+        if re.match("\.ttc$", self.extension, re.IGNORECASE):
+            sys.exit(projectName + ": Can not create True Type Collections")
 
 
     def patch(self):
+
+        print("{} Patcher v{} executing\n".format(projectName, version))
+
         if self.args.single:
             # Force width to be equal on all glyphs to ensure the font is considered monospaced on Windows.
             # This needs to be done on all characters, as some information seems to be lost from the original font file.
             self.set_sourcefont_glyph_widths()
+            # For some Windows applications (e.g. 'cmd') that is not enough. But they seem to honour the Panose table
+            # https://forum.high-logic.com/postedfiles/Panose.pdf
+            panose = list(self.sourceFont.os2_panose)
+            if panose[0] == 0 or panose[0] == 2: # 0 (1st value) = family kind; 0 = any (default); 2 = latin text and display
+                panose[0] = 2 # Assert kind
+                panose[3] = 9 # 3 (4th value) = propotion; 9 = monospaced
+                self.sourceFont.os2_panose = tuple(panose)
 
         # Prevent opening and closing the fontforge font. Makes things faster when patching
         # multiple ranges using the same symbol font.
@@ -157,6 +179,7 @@ class font_patcher:
         sym_font_group.add_argument('--fontawesomeextension',                       dest='fontawesomeextension', default=False, action='store_true', help='Add Font Awesome Extension Glyphs (https://andrelzgava.github.io/font-awesome-extension/)')
         sym_font_group.add_argument('--fontlinux', '--fontlogos',                   dest='fontlinux',            default=False, action='store_true', help='Add Font Linux and other open source Glyphs (https://github.com/Lukas-W/font-logos)')
         sym_font_group.add_argument('--octicons',                                   dest='octicons',             default=False, action='store_true', help='Add Octicons Glyphs (https://octicons.github.com)')
+        sym_font_group.add_argument('--codicons',                                   dest='codicons',             default=False, action='store_true', help='Add Codicons Glyphs (https://github.com/microsoft/vscode-codicons)')
         sym_font_group.add_argument('--powersymbols',                               dest='powersymbols',         default=False, action='store_true', help='Add IEC Power Symbols (https://unicodepowersymbol.com/)')
         sym_font_group.add_argument('--pomicons',                                   dest='pomicons',             default=False, action='store_true', help='Add Pomicon Glyphs (https://github.com/gabrielelana/pomicons)')
         sym_font_group.add_argument('--powerline',                                  dest='powerline',            default=False, action='store_true', help='Add Powerline Glyphs')
@@ -172,6 +195,7 @@ class font_patcher:
             self.args.fontawesomeextension = True
             self.args.fontlinux = True
             self.args.octicons = True
+            self.args.codicons = True
             self.args.powersymbols = True
             self.args.pomicons = True
             self.args.powerline = True
@@ -235,6 +259,9 @@ class font_patcher:
             if self.args.powersymbols:
                 additionalFontNameSuffix += " PS"
                 verboseAdditionalFontNameSuffix += " Plus Power Symbols"
+            if self.args.codicons:
+                additionalFontNameSuffix += " C"
+                verboseAdditionalFontNameSuffix += " Plus Codicons"
             if self.args.pomicons:
                 additionalFontNameSuffix += " P"
                 verboseAdditionalFontNameSuffix += " Plus Pomicons"
@@ -347,7 +374,19 @@ class font_patcher:
             'Cascadia Code'  : 'Caskaydia Cove',
             'cascadia code'  : 'caskaydia cove',
             'CascadiaCode'   : 'CaskaydiaCove',
-            'cascadiacode'   : 'caskaydiacove'
+            'cascadiacode'   : 'caskaydiacove',
+            'Cascadia Mono'  : 'Caskaydia Mono',
+            'cascadia mono'  : 'caskaydia mono',
+            'CascadiaMono'   : 'CaskaydiaMono',
+            'cascadiamono'   : 'caskaydiamono',
+            'Fira Mono'      : 'Fura Mono',
+            'Fira Sans'      : 'Fura Sans',
+            'FiraMono'       : 'FuraMono',
+            'FiraSans'       : 'FuraSans',
+            'fira mono'      : 'fura mono',
+            'fira sans'      : 'fura sans',
+            'firamono'       : 'furamono',
+            'firasans'       : 'furasans',
         }
 
         # remove overly verbose font names
@@ -391,12 +430,13 @@ class font_patcher:
         self.sourceFont.comment = projectInfo
         self.sourceFont.fontlog = projectInfo
 
-        # TODO version not being set for all font types (e.g. ttf)
         # print("Version was {}".format(sourceFont.version))
         if self.sourceFont.version != None:
             self.sourceFont.version += ";" + projectName + " " + version
         else:
             self.sourceFont.version = str(self.sourceFont.cidversion) + ";" + projectName + " " + version
+        self.sourceFont.sfntRevision = None # Auto-set (refreshed) by fontforge
+        self.sourceFont.appendSFNTName(str('English (US)'), str('Version'), "Version " + self.sourceFont.version)
         # print("Version now is {}".format(sourceFont.version))
 
 
@@ -413,10 +453,10 @@ class font_patcher:
                     print("Successfully removed subtable:", subtable)
                 except Exception:
                     print("Failed to remove subtable:", subtable)
-            elif self.args.removeligatures:
-                print("Unable to read configfile, unable to remove ligatures")
-            else:
-                print("No configfile given, skipping configfile related actions")
+        elif self.args.removeligatures:
+            print("Unable to read configfile, unable to remove ligatures")
+        else:
+            print("No configfile given, skipping configfile related actions")
 
 
     def check_position_conflicts(self):
@@ -519,29 +559,29 @@ class font_patcher:
         # Define the character ranges
         # Symbol font ranges
         self.patch_set = [
-            {'Enabled': True,                           'Name': "Seti-UI + Custom",        'Filename': "original-source.otf",              'Exact': False,                               'SymStart': 0xE4FA, 'SymEnd': 0xE530, 'SrcStart': 0xE5FA, 'SrcEnd': 0xE630, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': True,                           'Name': "Devicons",                'Filename': "devicons.ttf",                     'Exact': False,                               'SymStart': 0xE600, 'SymEnd': 0xE6C5, 'SrcStart': 0xE700, 'SrcEnd': 0xE7C5, 'ScaleGlyph': DEVI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.powerline,            'Name': "Powerline Symbols",       'Filename': "PowerlineSymbols.otf",             'Exact': True,                                'SymStart': 0xE0A0, 'SymEnd': 0xE0A2, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.powerline,            'Name': "Powerline Symbols",       'Filename': "PowerlineSymbols.otf",             'Exact': True,                                'SymStart': 0xE0B0, 'SymEnd': 0xE0B3, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",        'Exact': True,                                'SymStart': 0xE0A3, 'SymEnd': 0xE0A3, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",        'Exact': True,                                'SymStart': 0xE0B4, 'SymEnd': 0xE0C8, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",        'Exact': True,                                'SymStart': 0xE0CA, 'SymEnd': 0xE0CA, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",        'Exact': True,                                'SymStart': 0xE0CC, 'SymEnd': 0xE0D4, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
-            {'Enabled': self.args.pomicons,             'Name': "Pomicons",                'Filename': "Pomicons.otf",                     'Exact': True,                                'SymStart': 0xE000, 'SymEnd': 0xE00A, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.fontawesome,          'Name': "Font Awesome",            'Filename': "FontAwesome.otf",                  'Exact': True,                                'SymStart': 0xF000, 'SymEnd': 0xF2E0, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': FONTA_SCALE_LIST, 'Attributes': SYM_ATTR_FONTA},
-            {'Enabled': self.args.fontawesomeextension, 'Name': "Font Awesome Extension",  'Filename': "font-awesome-extension.ttf",       'Exact': False,                               'SymStart': 0xE000, 'SymEnd': 0xE0A9, 'SrcStart': 0xE200, 'SrcEnd': 0xE2A9, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Maximize
-            {'Enabled': self.args.powersymbols,         'Name': "Power Symbols",           'Filename': "Unicode_IEC_symbol_font.otf",      'Exact': True,                                'SymStart': 0x23FB, 'SymEnd': 0x23FE, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Power, Power On/Off, Power On, Sleep
-            {'Enabled': self.args.powersymbols,         'Name': "Power Symbols",           'Filename': "Unicode_IEC_symbol_font.otf",      'Exact': True,                                'SymStart': 0x2B58, 'SymEnd': 0x2B58, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Heavy Circle (aka Power Off)
-            {'Enabled': self.args.material,             'Name': "Material",                'Filename': "materialdesignicons-webfont.ttf",  'Exact': False,                               'SymStart': 0xF001, 'SymEnd': 0xF847, 'SrcStart': 0xF500, 'SrcEnd': 0xFD46, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.weather,              'Name': "Weather Icons",           'Filename': "weathericons-regular-webfont.ttf", 'Exact': False,                               'SymStart': 0xF000, 'SymEnd': 0xF0EB, 'SrcStart': 0xE300, 'SrcEnd': 0xE3EB, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.fontlinux,            'Name': "Font Logos (Font Linux)", 'Filename': "font-logos.ttf",                   'Exact': self.fontlinuxExactEncodingPosition, 'SymStart': 0xF100, 'SymEnd': 0xF12D, 'SrcStart': 0xF300, 'SrcEnd': 0xF32D, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                     'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0xF000, 'SymEnd': 0xF105, 'SrcStart': 0xF400, 'SrcEnd': 0xF505, 'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Magnifying glass
-            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                     'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0x2665, 'SymEnd': 0x2665, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Heart
-            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                     'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
-            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                     'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0xF27C, 'SymEnd': 0xF27C, 'SrcStart': 0xF4A9, 'SrcEnd': 0xF4A9, 'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Desktop
-            {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                   'Exact': True,                                'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': 0x0000, 'SrcEnd': 0x0000, 'ScaleGlyph': None,             'Attributes': CUSTOM_ATTR}
+            {'Enabled': True,                           'Name': "Seti-UI + Custom",        'Filename': "original-source.otf",                            'Exact': False,                               'SymStart': 0xE4FA, 'SymEnd': 0xE531, 'SrcStart': 0xE5FA, 'SrcEnd': 0xE631, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': True,                           'Name': "Devicons",                'Filename': "devicons.ttf",                                   'Exact': False,                               'SymStart': 0xE600, 'SymEnd': 0xE6C5, 'SrcStart': 0xE700, 'SrcEnd': 0xE7C5, 'ScaleGlyph': DEVI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.powerline,            'Name': "Powerline Symbols",       'Filename': "powerline-symbols/PowerlineSymbols.otf",         'Exact': True,                                'SymStart': 0xE0A0, 'SymEnd': 0xE0A2, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.powerline,            'Name': "Powerline Symbols",       'Filename': "powerline-symbols/PowerlineSymbols.otf",         'Exact': True,                                'SymStart': 0xE0B0, 'SymEnd': 0xE0B3, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",                      'Exact': True,                                'SymStart': 0xE0A3, 'SymEnd': 0xE0A3, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",                      'Exact': True,                                'SymStart': 0xE0B4, 'SymEnd': 0xE0C8, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",                      'Exact': True,                                'SymStart': 0xE0CA, 'SymEnd': 0xE0CA, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.powerlineextra,       'Name': "Powerline Extra Symbols", 'Filename': "PowerlineExtraSymbols.otf",                      'Exact': True,                                'SymStart': 0xE0CC, 'SymEnd': 0xE0D4, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_POWERLINE},
+            {'Enabled': self.args.pomicons,             'Name': "Pomicons",                'Filename': "Pomicons.otf",                                   'Exact': True,                                'SymStart': 0xE000, 'SymEnd': 0xE00A, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.fontawesome,          'Name': "Font Awesome",            'Filename': "font-awesome/FontAwesome.otf",                   'Exact': True,                                'SymStart': 0xF000, 'SymEnd': 0xF2E0, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': FONTA_SCALE_LIST, 'Attributes': SYM_ATTR_FONTA},
+            {'Enabled': self.args.fontawesomeextension, 'Name': "Font Awesome Extension",  'Filename': "font-awesome-extension.ttf",                     'Exact': False,                               'SymStart': 0xE000, 'SymEnd': 0xE0A9, 'SrcStart': 0xE200, 'SrcEnd': 0xE2A9, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Maximize
+            {'Enabled': self.args.powersymbols,         'Name': "Power Symbols",           'Filename': "Unicode_IEC_symbol_font.otf",                    'Exact': True,                                'SymStart': 0x23FB, 'SymEnd': 0x23FE, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Power, Power On/Off, Power On, Sleep
+            {'Enabled': self.args.powersymbols,         'Name': "Power Symbols",           'Filename': "Unicode_IEC_symbol_font.otf",                    'Exact': True,                                'SymStart': 0x2B58, 'SymEnd': 0x2B58, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},  # Heavy Circle (aka Power Off)
+            {'Enabled': self.args.material,             'Name': "Material",                'Filename': "materialdesignicons-webfont.ttf",                'Exact': False,                               'SymStart': 0xF001, 'SymEnd': 0xF847, 'SrcStart': 0xF500, 'SrcEnd': 0xFD46, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.weather,              'Name': "Weather Icons",           'Filename': "weather-icons/weathericons-regular-webfont.ttf", 'Exact': False,                               'SymStart': 0xF000, 'SymEnd': 0xF0EB, 'SrcStart': 0xE300, 'SrcEnd': 0xE3EB, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.fontlinux,            'Name': "Font Logos (Font Linux)", 'Filename': "font-logos.ttf",                                 'Exact': self.fontlinuxExactEncodingPosition, 'SymStart': 0xF100, 'SymEnd': 0xF12D, 'SrcStart': 0xF300, 'SrcEnd': 0xF32D, 'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0xF000, 'SymEnd': 0xF105, 'SrcStart': 0xF400, 'SrcEnd': 0xF505, 'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Magnifying glass
+            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0x2665, 'SymEnd': 0x2665, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Heart
+            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
+            {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0xF27C, 'SymEnd': 0xF27C, 'SrcStart': 0xF4A9, 'SrcEnd': 0xF4A9, 'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Desktop
+            {'Enabled': self.args.codicons,             'Name': "Codicons",                'Filename': "codicons/codicon.ttf",                           'Exact': True,                                'SymStart': 0xEA60, 'SymEnd': 0xEBEB, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                                 'Exact': True,                                'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': 0x0000, 'SrcEnd': 0x0000, 'ScaleGlyph': None,             'Attributes': CUSTOM_ATTR}
         ]
-
 
     def setup_line_dimensions(self):
         # win_ascent and win_descent are used to set the line height for windows fonts.
@@ -554,6 +594,9 @@ class font_patcher:
                 self.sourceFont.os2_winascent += 1
 
             # Make the line size identical for windows and mac
+            # ! This is broken because hhea* is changed but os2_typo* is not
+            # ! On the other hand we need intact (i.e. original) typo values
+            # ! in get_sourcefont_dimensions() @TODO FIXME
             self.sourceFont.hhea_ascent = self.sourceFont.os2_winascent
             self.sourceFont.hhea_descent = -self.sourceFont.os2_windescent
 
@@ -573,6 +616,9 @@ class font_patcher:
             'width' : 0,
             'height': 0,
         }
+        if self.sourceFont.os2_use_typo_metrics:
+            self.font_dim['ymin'] = self.sourceFont.os2_typodescent
+            self.font_dim['ymax'] = self.sourceFont.os2_typoascent
 
         # Find the biggest char width
         # Ignore the y-values, os2_winXXXXX values set above are used for line height
@@ -618,10 +664,8 @@ class font_patcher:
             careful = True
 
         if exactEncoding is False:
-            sourceFontList = []
+            sourceFontList = list(range(sourceFontStart, sourceFontEnd + 1))
             sourceFontCounter = 0
-            for i in range(sourceFontStart, sourceFontEnd + 1):
-                sourceFontList.append(format(i, 'X'))
 
         scale_factor = 0
         if scaleGlyph:
@@ -634,21 +678,18 @@ class font_patcher:
         # and only copy those that are not already contained in the source font
         if symbolFontStart == 0:
             symbolFont.selection.all()
-            self.sourceFont.selection.all()
             careful = True
         else:
             symbolFont.selection.select((str("ranges"), str("unicode")), symbolFontStart, symbolFontEnd)
-            self.sourceFont.selection.select((str("ranges"), str("unicode")), sourceFontStart, sourceFontEnd)
 
-        # Get number of selected non-empty glyphs @TODO FIXME
-        for index, sym_glyph in enumerate(symbolFont.selection.byGlyphs):
-            glyphSetLength += 1
-        # end for
+        # Get number of selected non-empty glyphs
+        symbolFontSelection = list(symbolFont.selection.byGlyphs)
+        glyphSetLength = len(symbolFontSelection)
 
         if self.args.quiet is False:
             sys.stdout.write("Adding " + str(max(1, glyphSetLength)) + " Glyphs from " + setName + " Set \n")
 
-        for index, sym_glyph in enumerate(symbolFont.selection.byGlyphs):
+        for index, sym_glyph in enumerate(symbolFontSelection):
             index = max(1, index)
 
             try:
@@ -659,25 +700,16 @@ class font_patcher:
             if exactEncoding:
                 # use the exact same hex values for the source font as for the symbol font
                 currentSourceFontGlyph = sym_glyph.encoding
-
-                # Save as a hex string without the '0x' prefix
-                copiedToSlot = format(sym_glyph.unicode, 'X')
             else:
                 # use source font defined hex values based on passed in start and end
-                # convince that this string really is a hex:
-                currentSourceFontGlyph = int("0x" + sourceFontList[sourceFontCounter], 16)
-                copiedToSlot = sourceFontList[sourceFontCounter]
+                currentSourceFontGlyph = sourceFontList[sourceFontCounter]
                 sourceFontCounter += 1
-
-            if int(copiedToSlot, 16) < 0:
-                print("Found invalid glyph slot number. Skipping.")
-                continue
 
             if self.args.quiet is False:
                 if self.args.progressbars:
                     update_progress(round(float(index + 1) / glyphSetLength, 2))
                 else:
-                    progressText = "\nUpdating glyph: " + str(sym_glyph) + " " + str(sym_glyph.glyphname) + " putting at: " + copiedToSlot
+                    progressText = "\nUpdating glyph: {} {} putting at: {:X}".format(sym_glyph, sym_glyph.glyphname, currentSourceFontGlyph)
                     sys.stdout.write(progressText)
                     sys.stdout.flush()
 
@@ -686,15 +718,16 @@ class font_patcher:
 
             # check if a glyph already exists in this location
             if careful or 'careful' in sym_attr['params']:
-                if copiedToSlot.startswith("uni"):
-                    copiedToSlot = copiedToSlot[3:]
-                codepoint = int("0x" + copiedToSlot, 16)
-                if codepoint in self.sourceFont:
+                if currentSourceFontGlyph in self.sourceFont:
                     if self.args.quiet is False:
-                        print("  Found existing Glyph at {}. Skipping...".format(copiedToSlot))
-
+                        print("  Found existing Glyph at {:X}. Skipping...".format(currentSourceFontGlyph))
                     # We don't want to touch anything so move to next Glyph
                     continue
+            else:
+                # If we overwrite an existing glyph all subtable entries regarding it will be wrong
+                # (Probably; at least if we add a symbol and do not substitude a ligature or such)
+                if currentSourceFontGlyph in self.sourceFont:
+                    self.sourceFont[currentSourceFontGlyph].removePosSub("*")
 
             # Select and copy symbol from its encoding point
             # We need to do this select after the careful check, this way we don't
@@ -746,7 +779,7 @@ class font_patcher:
                 if 'overlap' in sym_attr['params']:
                     scale_ratio_x *= 1 + sym_attr['params']['overlap']
                     scale_ratio_y *= 1 + sym_attr['params']['overlap']
-                self.sourceFont.transform(psMat.scale(scale_ratio_x, scale_ratio_y))
+                self.sourceFont[currentSourceFontGlyph].transform(psMat.scale(scale_ratio_x, scale_ratio_y))
 
             # Use the dimensions from the newly pasted and stretched glyph
             sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph])
@@ -777,7 +810,7 @@ class font_patcher:
                     x_align_distance += overlap_width
 
             align_matrix = psMat.translate(x_align_distance, y_align_distance)
-            self.sourceFont.transform(align_matrix)
+            self.sourceFont[currentSourceFontGlyph].transform(align_matrix)
 
             # Needed for setting 'advance width' on each glyph so they do not overlap,
             # also ensures the font is considered monospaced on Windows by setting the
@@ -789,12 +822,6 @@ class font_patcher:
             # does not overlap the bearings (edges)
             self.remove_glyph_neg_bearings(self.sourceFont[currentSourceFontGlyph])
 
-            # reset selection so iteration works properly @TODO fix? rookie misunderstanding?
-            # This is likely needed because the selection was changed when the glyph was copy/pasted
-            if symbolFontStart == 0:
-                symbolFont.selection.all()
-            else:
-                symbolFont.selection.select((str("ranges"), str("unicode")), symbolFontStart, symbolFontEnd)
         # end for
 
         if self.args.quiet is False or self.args.progressbars:

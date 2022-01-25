@@ -7,3 +7,7 @@ SCRIPTPATH=${BASH_SOURCE%/*}
 for font in ${SCRIPTPATH}/*.ttf; do
 	fontforge -script font-patcher.py --careful --complete --progressbars "$font"
 done
+
+for font in ${SCRIPTPATH}/*.otf; do
+	fontforge -script font-patcher.py --careful --complete --progressbars "$font"
+done
