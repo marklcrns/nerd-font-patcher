@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker run --rm -v ./fonts:/in -v ./fonts-patched:/out marklcrns/font-patcher:1.0 --careful --complete --progressbars

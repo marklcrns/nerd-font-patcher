@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if ! command -v wget &>/dev/null; then
+	echo "E: Install wget"
+	exit 1
+fi
+
+SCRIPTPATH=${BASH_SOURCE%/*}
+
+# Fetch latest FontPatcher script and dependencies
+wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip -O "${SCRIPTPATH}/FontPatcher.zip"
+
+# Extract FontPatcher to dist
+unzip "${SCRIPTPATH}/FontPatcher.zip" -d "${SCRIPTPATH}" -x readme.md
+rm "${SCRIPTPATH}/FontPatcher.zip"
