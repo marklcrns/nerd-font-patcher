@@ -31,6 +31,6 @@ To rebuild the docker image with fresh dependencies, run:
 docker build .
 
 # ALTERNATIVE: Tag docker image
-docker build -t marklcrns/font-patcher:1.0 .
+docker build -t marklcrns/font-patcher:v1.0 .
 ``````
 
