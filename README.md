@@ -32,5 +32,5 @@ docker build .
 
 # ALTERNATIVE: Tag docker image
 docker build -t marklcrns/font-patcher:v1.0 .
-``````
+```
 
