@@ -19,6 +19,17 @@ docker run --rm -v ./fonts:/in -v ./fonts-patched:/out <docker-image> --careful 
 ./patch
 ```
 
+## Install
+
+After patching fonts, you can install them using `install-fonts-patched` script
+(OSX and Linux only).
+
+```bash
+# After running ./patch, there should be a ./fonts-patched directory where the
+# patched fonts are located. Run the following script to install them.
+./install-fonts-patched
+```
+
 ## Docker build
 
 To rebuild the docker image with fresh dependencies, run:
@@ -34,13 +45,3 @@ docker build .
 docker build -t marklcrns/font-patcher:v1.0 .
 ```
 
-## Install
-
-After patching fonts, you can install them using `install-fonts-patched` script
-(OSX and Linux only).
-
-```bash
-# After running ./patch, there should be a ./fonts-patched directory where the
-# patched fonts are located. Run the following script to install them.
-./install-fonts-patched
-```
