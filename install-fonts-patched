@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Find all font files in the specified folder and its subfolders
+FONT_FILES=$(find "./fonts-patched" -type f \( -iname \*.ttf -o -iname \*.otf \))
+
+if [[ $FONT_FILES == "" ]]; then
+	echo "No fonts found to install!"
+	exit 1
+fi
+
+while IFS= read -r font_file; do
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		# Move the font file to the system fonts directory
+		sudo mv "$font_file" "/Library/Fonts/$(basename "$font_file")"
+		# Set the correct file permissions for the font
+		sudo chmod 644 "/Library/Fonts/$(basename "$font_file")"
+	else
+		# Move the font file to the system fonts directory
+		sudo mv "$font_file" "/usr/share/fonts/truetype/$(basename "$font_file")"
+		# Set the correct file permissions for the font
+		sudo chmod 644 "/usr/share/fonts/truetype/$(basename "$font_file")"
+	fi
+done <<<"$FONT_FILES"
+
+# Update the font cache
+if [[ "$OSTYPE" != "darwin"* ]]; then
+	sudo fc-cache -f -v
+fi
+
+echo "Fonts installed successfully!"

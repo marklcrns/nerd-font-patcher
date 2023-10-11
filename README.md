@@ -11,12 +11,12 @@ fonts in bulk.
 ## Usage
 
 ```bash
-# Patch fonts in ./fonts and output to ./fonts-patched
+# Fonts to patch must be in ./fonts. The output fonts will be in ./fonts-patched
 # NOTE: the script is not recursive, so fonts in subdirectories will not be patched
 docker run --rm -v ./fonts:/in -v ./fonts-patched:/out <docker-image> --careful --complete --progressbars
 
 # Or simply run using existing docker image marklcrns/font-patcher:1.0
-./patcher
+./patch
 ```
 
 ## Docker build
@@ -34,3 +34,13 @@ docker build .
 docker build -t marklcrns/font-patcher:v1.0 .
 ```
 
+## Install
+
+After patching fonts, you can install them using `install-fonts-patched` script
+(OSX and Linux only).
+
+```bash
+# After running ./patch, there should be a ./fonts-patched directory where the
+# patched fonts are located. Run the following script to install them.
+./install-fonts-patched
+```

@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
+# Pull docker image if not already present
+docker build -t marklcrns/font-patcher:v1.0 .
 docker run --rm -v ./fonts:/in -v ./fonts-patched:/out marklcrns/font-patcher:v1.0 --careful --complete --progressbars
