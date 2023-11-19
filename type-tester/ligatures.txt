@@ -1,0 +1,12 @@
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+1234567890!@#$%^&*()_+{}|:"<>?[]\;',./~`
+
+object o;
+if (o is int i || (o is string s &&
+    int.TryParse(s, out i)) { /* use i */ }
+var x = 0xABCDEF;
+-> --> ==> != === !== && ||<=<
+</><tag> http://www.marklucernas.com
+<=><!-- HTML Comment -->
+i++; #### ***

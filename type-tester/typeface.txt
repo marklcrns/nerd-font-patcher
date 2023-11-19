@@ -1,0 +1,106 @@
+# Source: https://typeheist.co/blog/sample-text-for-typeface-character-testing/
+
+Word list
+aaron abduct accidental adjacent afghan after aint anaheim and anybody although allotted ambidextrous amend announced aqua arrangement ask aspin ate attitude authorised avery award axolotl baby baghdad banana batty beeped bent billow bizarre blood bottle bowwow boyfriend bubbly buzzing byproduct bystander byzantine cappuccino cattle cent cicero coccyx cooked copyright coyote croquet cumbersome cycle cylinder czech dabble daddy day divide don’t dr during dyke each ebb eek elephant emblem ensnare epiphany esquire etching equine farming feared filler fizzy fjord fluid foggy foxxy frontal fungal gaggle geared gnome grubby happened happiness hazy hellish hope hungry hyphen icy i’m impossible intolerant it’s i’ve jazzy jagged jenga jill joint just kangaroo kettle kitchen knack koala kooky laboratory landing left letter likely lilac little loco lolly lover’s luna luxurious lying master matter metres miss moonlight morph mr mrs ms mummy muster nasal neanderthal necessarily nine nonsense noon numb oar obfuscate occult oddly often ogre okay omission ozone parallel pear picnic pneumonic poppy porous pygmy quantum queen quince quota radii rafferty rattle reassure resist retiree rice roommate running sassafras savvy scent scuttle seismic shining shook sieve sister skink slump snide soup spire stay subject sultana svelte swiftly tallied tattooed taxed tension the theatre title totally trekked tsunami tutor tying vacuum variable vent vivid void vulnerable vying waffle wally warranted water weather whale withheld worry wurst wysiwyg wyvern xenon xmas yak yeah yip you’re yuck zac zeal zigzag zing zodiac zoo
+
+Change the casing here: convertcase.net →
+
+Why no quick brown fox?
+Here is a great article on why pangrams aren't the best for proofing typefaces: typography.com/blog/text-for-proofing-fonts. I find a dedicated word list covers more real world combinations and looks more natural.
+
+Numbers and fractions
+$1 $2 $3 $4 $5 $6 $7 $8 $9 $0
+£1 £2 £3 £4 £5 £6 £7 £8 £9 £0
+€1 €2 €3 €4 €5 €6 €7 €8 €9 €0
+฿1 ฿2 ฿3 ฿4 ฿5 ฿6 ฿7 ฿8 ฿9 ฿0
+1¢ 2¢ 3¢ 4¢ 5¢ 6¢ 7¢ 8¢ 9¢ 0¢
+1/2 2/3 4/5 6/7 8/9
+
+111 222 333 444 555 666 777 888 999 000
+1¹ 1² 1³ 2¹ 2² 2³ 3¹ 3² 3³ 4¹ 4² 4³ 5¹ 5² 5³ 6¹ 6² 6³ 7¹ 7² 7³ 8¹ 8² 8³ 9¹ 9² 9³
+1% 2% 3% 4% 5% 6% 7% 8% 9% 10%
+⅕ ¼ ⅓ ½ ⅔ ¾
+
+123g butter, softened
+
+456g (1 ½ cups) icing sugar
+
+78ml (¼ cup) gin
+
+9 tbsp tonic water
+
+10 tsp finely grated lemon rind
+
+1 ¾ x 987g madeira cakes
+
+1 ⅓ x 654g packets white chocolate melts
+
+1 ⅔ cup desiccated coconut
+
+1 ⅕ cup milk
+
+Symbols
+{{curly}} (parenthesis) [square] #hash asterix* colon: semicolon; tilde~ exclamation! question? interrobang‽ caret^ degrees° <great&less> pipe|pipe
+‘singlequote’ 'straightquotes' “doublequotes” "doublestraight"
+person_name@email.com
+©copyright ­registered® trademarked™
+
+Kerning pairs
+Av Aw Ay Az Fa Fe Fi Fo Fu Kv Kw Ky Pa Pe Po Ta Te Ti To Tr Ts Tu Ty Va Ve Vo Vr Vu Vy Wa We Wr Wv Wy
+
+AC AT AVA AWA AYA AV AW AY AZ CT CYC FA FE FO KV KW KY LO LV LY NG OD PA PA PE PO TA TA TE TI TO TR TS TU TY UA VA VA VE VO VR VU VY WA WO WA WE WR WV WY YS
+
+Punctuation
+A… A. A: A, A; A! A?
+B… B. B: B, B; B! B?
+C… C. C: C, C; C! C?
+D… D. D: D, D; D! D?
+E… E. E: E, E; E! E?
+F… F. F: F, F; F! F?
+G… G. G: G, G; G! G?
+H… H. H: H, H; H! H?
+I… I. I: I, I; I! I?
+J… J. J: J, J; J! J?
+K… K. K: K, K; K! K?
+L… L. L: L, L; L! L?
+M… M. M: M, M; M! M?
+N… N. N: N, N; N! N?
+O… O. O: O, O; O! O?
+P… P. P: P, P; P! P?
+Q… Q. Q: Q, Q; Q! Q?
+R… R. R: R, R; R! R?
+S… S. S: S, S; S! S?
+T… T. T: T, T; T! T?
+U… U. U: U, U; U! U?
+V… V. V: V, V; V! V?
+W… W. W: W, W; W! W?
+X… X. X: X, X; X! X?
+Y… Y. Y: Y, Y; Y! Y?
+Z… Z. Z: Z, Z; Z! Z?
+
+a… a. a: a, a; a! a?
+b… b. b: b, b; b! b?
+c… c. c: c, c; c! c?
+d… d. d: d, d; d! d?
+e… e. e: e, e; e! e?
+f… f. f: f, f; f! f?
+g… g. g: g, g; g! g?
+h… h. h: h, h; h! h?
+i… i. i: i, i; i! i?
+j… j. j: j, j; j! j?
+k… k. k: k, k; k! k?
+l… l. l: l, l; l! l?
+m… m. m: m, m; m! m?
+n… n. n: n, n; n! n?
+o… o. o: o, o; o! o?
+p… p. p: p, p; p! p?
+q… q. q: q, q; q! q?
+r… r. r: r, r; r! r?
+s… s. s: s, s; s! s?
+t… t. t: t, t; t! t?
+u… u. u: u, u; u! u?
+v… v. v: v, v; v! v?
+w… w. w: w, w; w! w?
+x… x. x: x, x; x! x?
+y… y. y: y, y; y! y?
+z… z. z: z, z; z! z?
