@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Sample texts to print to test the font
+
+# Alphabet
+alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+echo $alphabet
+
+# Numbers
+numbers="0123456789"
+echo $numbers
+
+# Special characters
+special_characters="!@#$%^&*()_+-=[]{}|;':\",.\/<>?"
+echo $special_characters
+
+# Ligatures symbols
+ligatures="-> <- --> <-- => <= == === != !==
+            =>> <<= <<= >>= >>>= >>> ===>
+            <== <=== <===> <==== <====> <=====>
+            <$> <*> <|> </> |> <!-- <~> <~~> <~ ~> <~~ ~> <~>~>"
+echo $ligatures
+
+# Greek alphabet
+greek_alphabet="αβγδεζηθικλμνξοπρστυφχψω"
+echo $greek_alphabet
+
+# Symbols
+symbols="+ − × ÷ ± ∓ √ ∵ ∴ ∠ ≅ ≈ ≠ ≡ ≢ ≺ ≻ ≼ ≽ ⊂ ⊃ ⊆ ⊇ ⊕ ⊗ ⊥ ⋅ ⌈⌉ ⌊⌋ ∫ ∬ ∭ ∮ ∯ ∰ ∇ ∆ ∈ ∉ ∋ ∌ ℕ ℤ ℚ ℝ ℂ ℵ ℶ ℷ ℸ 𝓟"
+echo $symbols
