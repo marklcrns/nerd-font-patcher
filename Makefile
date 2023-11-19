@@ -8,4 +8,4 @@ test:
 
 # Clean everything in .gitignore
 clean:
-	git clean -Xdf
+	sudo git clean -Xdf
